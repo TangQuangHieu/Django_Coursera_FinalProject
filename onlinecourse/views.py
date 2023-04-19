@@ -117,11 +117,11 @@ def submit(request, course_id):
     submission = Submission.objects.create(enrollment=enrollment)
     submitted_answers = extract_answers(request)
     #choices = [Choice.objects.get(id=id) for id in submitted_answers]
-    for sumbmited_answer in submitted_answers:
-        submission.choices.add(submitted_answer)
+    for submited_answer in submitted_answers:
+        submission.choices.add(submited_answer)
     submission.save()
     #return HttpResponseRedirect(reverse(viewname='onlinecourse:course_details', args=(course.id,)))
-    return render(request, 'onlinecourse/user_login_bootstrap.html', {})
+    return HttpResponseRedirect(reverse(viewname='onlinecourse:result', args=(course.id,submission.id,)))
 
 
 # <HINT> A example method to collect the selected choices from the exam form from the request object
@@ -145,16 +145,20 @@ def show_exam_result(request, course_id, submission_id):
     user = request.user
     course = Course.objects.get(id=course_id)
     submission = Submission.objects.get(id=submission_id)
-    selected_choices = submission.choices 
-    score=0
+    selected_choices =submission.choices.all()
+    grade=0
+    selected_ids=[]
     for selected_choice in selected_choices:
-        choice = Choice.objects.get(id=selected_choice)
-        score+=choice.is_correct
+        #choice = Choice.objects.get(id=selected_choice)
+        grade+=selected_choice.is_correct
+        selected_ids.append(selected_choice.id)
+    lesson = selected_choices[0].question.lesson
     context={
         'user':user,
+        'lesson':lesson,
+        'selected_ids':selected_ids,
+        'grade':grade,
         'course':course,
-        'selected_ids':selected_choices,
-        'grade':score,
     }
     return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
     
